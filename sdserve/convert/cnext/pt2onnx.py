@@ -1,6 +1,6 @@
 from safetensors.torch import load_file
 import torch
-from sdserve.models.cnext.cnext import ControlNetModel
+from sdserve.models.cnext.cnext import ControlNeXt
 
 def load_safetensors(model, safetensors_path, strict=True, load_weight_increasement=False):
     if not load_weight_increasement:
@@ -18,7 +18,7 @@ def convert(ckpt_path: str, output_path: str, opset_version: int = 14, do_consta
     Convert the controlnet model to ONNX format
     """
     # load from checkpoint
-    controlnet = ControlNetModel()
+    controlnet = ControlNeXt()
     load_safetensors(controlnet, ckpt_path)
     # dummy inputs
     image = torch.randn((1, 3, 512, 512), dtype=torch.float32)
