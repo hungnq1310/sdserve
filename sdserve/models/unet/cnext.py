@@ -1052,9 +1052,9 @@ class UNet2DConditionModel(
         added_cond_kwargs: Optional[Dict[str, torch.Tensor]] = None,
         down_block_additional_residuals: Optional[Tuple[torch.Tensor]] = None,
         mid_block_additional_residual: Optional[torch.Tensor] = None,
-        mid_block_additional_residual_scale: Optional[torch.Tensor] = None, #* CHANGE
         down_intrablock_additional_residuals: Optional[Tuple[torch.Tensor]] = None,
         encoder_attention_mask: Optional[torch.Tensor] = None,
+        controls: Optional[Dict[str, torch.Tensor]] = None,
         return_dict: bool = True,
     ) -> Union[UNet2DConditionOutput, Tuple]:
         r"""
@@ -1193,6 +1193,7 @@ class UNet2DConditionModel(
             scale_lora_layers(self, lora_scale)
 
         is_controlnet = mid_block_additional_residual is not None and down_block_additional_residuals is not None
+        is_controlnext = controls is not None
         # using new arg down_intrablock_additional_residuals for T2I-Adapters, to distinguish from controlnets
         is_adapter = down_intrablock_additional_residuals is not None
         # maintain backward compatibility for legacy usage, where
@@ -1211,6 +1212,17 @@ class UNet2DConditionModel(
             is_adapter = True
 
         down_block_res_samples = (sample,)
+
+        #! CNEXT:
+        if is_controlnext:
+            scale = controls['scale']
+            controls = controls['out'].to(sample)
+            mean_latents, std_latents = torch.mean(sample, dim=(1, 2, 3), keepdim=True), torch.std(sample, dim=(1, 2, 3), keepdim=True)
+            mean_control, std_control = torch.mean(controls, dim=(1, 2, 3), keepdim=True), torch.std(controls, dim=(1, 2, 3), keepdim=True)
+            controls = (controls - mean_control) * (std_latents / (std_control + 1e-12)) + mean_latents
+            controls = nn.functional.adaptive_avg_pool2d(controls, sample.shape[-2:])
+            sample = sample + controls * scale
+
         for downsample_block in self.down_blocks:
             if hasattr(downsample_block, "has_cross_attention") and downsample_block.has_cross_attention:
                 # For t2i-adapter CrossAttnDownBlock2D
@@ -1267,16 +1279,8 @@ class UNet2DConditionModel(
             ):
                 sample += down_intrablock_additional_residuals.pop(0)
 
-        # if is_controlnet:
-        #! CNEXT:
-        scale = mid_block_additional_residual_scale #* CHANGE
-        mid_block_additional_residual = mid_block_additional_residual #* CHANGE
-        mid_block_additional_residual=nn.functional.adaptive_avg_pool2d(mid_block_additional_residual, sample.shape[-2:])
-        mid_block_additional_residual = mid_block_additional_residual.to(sample)                
-        mean_latents, std_latents = torch.mean(sample, dim=(1, 2, 3), keepdim=True), torch.std(sample, dim=(1, 2, 3), keepdim=True)
-        mean_control, std_control = torch.mean(mid_block_additional_residual, dim=(1, 2, 3), keepdim=True), torch.std(mid_block_additional_residual, dim=(1, 2, 3), keepdim=True)
-        mid_block_additional_residual = (mid_block_additional_residual - mean_control) * (std_latents / (std_control + 1e-12)) + mean_latents
-        sample = sample + mid_block_additional_residual * scale
+        if is_controlnet:
+            sample = sample + mid_block_additional_residual
 
         # 5. up
         for i, upsample_block in enumerate(self.up_blocks):
