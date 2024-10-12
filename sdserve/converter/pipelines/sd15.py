@@ -105,6 +105,7 @@ class StableDiffusionConverter(OnnxConverter):
         del pipeline.text_encoder
 
     def _convert_unet(self, pipeline, num_tokens, text_hidden_size):
+        #! FIX THIS - controlnets
         controlnets = torch.nn.ModuleList(controlnets)
         unet_controlnet = UNet2DConditionControlNetModel(pipeline.unet, controlnets)
         unet_in_channels = pipeline.unet.config.in_channels
