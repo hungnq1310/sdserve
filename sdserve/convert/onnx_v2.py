@@ -139,10 +139,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.sd_xl:
-        from sdserve.convert.pipeline.sdxl import StableDiffusionXLConverter
+        from sdserve.convert.pipelines.sdxl import StableDiffusionXLConverter
         converter = StableDiffusionXLConverter(args.model_path, args.output_path, args.opset, args.fp16)
         converter.convert_models()
     else:
-        from sdserve.convert.pipeline.sd15 import StableDiffusionConverter
+        from sdserve.convert.pipelines.sd15 import StableDiffusionConverter
         converter = StableDiffusionConverter(args.model_path, args.output_path, args.opset, args.fp16)
         converter.convert_models()
