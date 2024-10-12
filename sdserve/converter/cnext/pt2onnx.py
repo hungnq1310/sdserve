@@ -13,6 +13,7 @@ def load_safetensors(model, safetensors_path, strict=True, load_weight_increasem
             state_dict[k] = state_dict[k] + pretrained_state_dict[k]
         model.load_state_dict(state_dict, strict=False)
 
+#TODO: convert this to class and inherit from OnnxConverter
 def convert(ckpt_path: str, output_path: str, opset_version: int = 14, do_constant_folding: bool = True):
     """
     Convert the controlnet model to ONNX format
