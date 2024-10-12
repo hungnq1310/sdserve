@@ -5,7 +5,7 @@ import inspect
 from diffusers import ControlNetModel
 
 from sdserve.models.cnet.flex import FlexControlNet
-from sdserve.convert.onnx import onnx_export, convert_to_fp16
+from sdserve.converter.onnx import onnx_export, convert_to_fp16
 
 class CnetConverter:
     def __init__(self,

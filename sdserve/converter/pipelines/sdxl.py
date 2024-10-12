@@ -12,7 +12,7 @@ from packaging import version
 from diffusers.models.attention_processor import AttnProcessor
 from diffusers.pipelines.controlnet.pipeline_controlnet_sd_xl import StableDiffusionXLControlNetPipeline
 
-from sdserve.convert.onnx_v2 import OnnxConverter
+from sdserve.converter.onnx_v2 import OnnxConverter
 from sdserve.models.unet.cnet import UNet2DConditionXLControlNetModel
 
 is_torch_less_than_1_11 = version.parse(version.parse(torch.__version__).base_version) < version.parse("1.11")
