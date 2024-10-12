@@ -63,7 +63,7 @@ class ControlProject(nn.Module):
         return hidden_states
 
 
-class ControlNetModel(ModelMixin, ConfigMixin):
+class ControlNeXt(ModelMixin, ConfigMixin):
 
     _supports_gradient_checkpointing = True
 
