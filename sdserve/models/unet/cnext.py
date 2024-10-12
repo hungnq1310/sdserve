@@ -30,6 +30,7 @@ from diffusers.models.attention_processor import (
     AttentionProcessor,
     AttnAddedKVProcessor,
     AttnProcessor,
+    FusedAttnProcessor2_0,
 )
 from diffusers.models.embeddings import (
     GaussianFourierProjection,
@@ -49,7 +50,6 @@ from diffusers.models.unets.unet_2d_blocks import (
     get_mid_block,
     get_up_block,
 )
-
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
@@ -705,7 +705,7 @@ class UNet2DConditionModel(
 
         def fn_recursive_add_processors(name: str, module: torch.nn.Module, processors: Dict[str, AttentionProcessor]):
             if hasattr(module, "get_processor"):
-                processors[f"{name}.processor"] = module.get_processor(return_deprecated_lora=True)
+                processors[f"{name}.processor"] = module.get_processor()
 
             for sub_name, child in module.named_children():
                 fn_recursive_add_processors(f"{name}.{sub_name}", child, processors)
@@ -890,6 +890,8 @@ class UNet2DConditionModel(
             if isinstance(module, Attention):
                 module.fuse_projections(fuse=True)
 
+        self.set_attn_processor(FusedAttnProcessor2_0())
+
     def unfuse_qkv_projections(self):
         """Disables the fused QKV projection if enabled.
 
@@ -1035,6 +1037,10 @@ class UNet2DConditionModel(
                 raise ValueError(
                     f"{self.__class__} has the config param `encoder_hid_dim_type` set to 'ip_image_proj' which requires the keyword argument `image_embeds` to be passed in  `added_conditions`"
                 )
+
+            if hasattr(self, "text_encoder_hid_proj") and self.text_encoder_hid_proj is not None:
+                encoder_hidden_states = self.text_encoder_hid_proj(encoder_hidden_states)
+
             image_embeds = added_cond_kwargs.get("image_embeds")
             image_embeds = self.encoder_hid_proj(image_embeds)
             encoder_hidden_states = (encoder_hidden_states, image_embeds)
