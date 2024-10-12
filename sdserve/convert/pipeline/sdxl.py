@@ -12,13 +12,14 @@ from packaging import version
 from diffusers.models.attention_processor import AttnProcessor
 from diffusers.pipelines.controlnet.pipeline_controlnet_sd_xl import StableDiffusionXLControlNetPipeline
 
+from sdserve.convert.onnx_v2 import OnnxConverter
 from sdserve.models.unet.cnet import UNet2DConditionXLControlNetModel
 
 is_torch_less_than_1_11 = version.parse(version.parse(torch.__version__).base_version) < version.parse("1.11")
 is_torch_2_0_1 = version.parse(version.parse(torch.__version__).base_version) == version.parse("2.0.1")
 
     
-class StableDiffusionXLConverter:
+class StableDiffusionXLConverter(OnnxConverter):
     def __init__(
         self, model_path: str, output_path: str, opset: int, fp16: bool = False
     ):
@@ -74,7 +75,7 @@ class StableDiffusionXLConverter:
             truncation=True,
             return_tensors="pt",
         )
-        onnx_export(
+        self.onnx_export(
             pipeline.text_encoder,
             # casting to torch.int32 until the CLIP fix is released: https://github.com/huggingface/transformers/pull/18515/files
             model_args=(text_input.input_ids.to(device=self.device, dtype=self.torch.int32)),
@@ -110,7 +111,7 @@ class StableDiffusionXLConverter:
             torch.randn(2, 1280).to(device=self.device, dtype=self.dtype),
             torch.rand(2, 6).to(device=self.device, dtype=self.dtype),
         )
-        onnx_export(
+        self.onnx_export(
             unet_controlnet,
             model_args=model_args,
             output_path=unet_path,
@@ -138,7 +139,7 @@ class StableDiffusionXLConverter:
         unet_dir = os.path.dirname(unet_model_path)
         # optimize onnx
         shape_inference.infer_shapes_path(unet_model_path, unet_model_path)
-        unet_opt_graph = optimize(onnx.load(unet_model_path), name="Unet", verbose=True)
+        unet_opt_graph = self.optimize(onnx.load(unet_model_path), name="Unet", verbose=True)
         # clean up existing tensor files
         shutil.rmtree(unet_dir)
         os.mkdir(unet_dir)
@@ -161,7 +162,7 @@ class StableDiffusionXLConverter:
         vae_sample_size = vae_encoder.config.sample_size
         # need to get the raw tensor output (sample) from the encoder
         vae_encoder.forward = lambda sample: vae_encoder.encode(sample).latent_dist.sample()
-        onnx_export(
+        self.onnx_export(
             vae_encoder,
             model_args=(torch.randn(1, vae_in_channels, vae_sample_size, vae_sample_size).to(device=self.device, dtype=self.dtype),),
             output_path=self.output_path / "vae_encoder" / "model.onnx",
@@ -178,7 +179,7 @@ class StableDiffusionXLConverter:
         vae_latent_channels = vae_decoder.config.latent_channels
         # forward only through the decoder part
         vae_decoder.forward = vae_encoder.decode
-        onnx_export(
+        self.onnx_export(
             vae_decoder,
             model_args=(
                 torch.randn(1, vae_latent_channels, unet_sample_size, unet_sample_size).to(device=self.device, dtype=self.dtype),

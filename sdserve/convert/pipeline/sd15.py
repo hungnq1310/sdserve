@@ -16,15 +16,15 @@ from diffusers import (
     StableDiffusionImg2ImgPipeline,
 )
 from diffusers.models.attention_processor import AttnProcessor
-from diffusers.pipelines.controlnet.pipeline_controlnet_sd_xl import StableDiffusionXLControlNetPipeline
 
+from sdserve.convert.onnx_v2 import OnnxConverter
 from sdserve.models.unet.cnet import UNet2DConditionControlNetModel
 
 is_torch_less_than_1_11 = version.parse(version.parse(torch.__version__).base_version) < version.parse("1.11")
 is_torch_2_0_1 = version.parse(version.parse(torch.__version__).base_version) == version.parse("2.0.1")
 
 
-class StableDiffusionConverter:
+class StableDiffusionConverter(OnnxConverter):
     def __init__(
             self, model_path: str, output_path: str, opset: int, fp16: bool = False
         ):
@@ -112,7 +112,7 @@ class StableDiffusionConverter:
         img_size = 8 * unet_sample_size
         unet_path = self.output_path / "unet" / "model.onnx"
 
-        onnx_export(
+        self.onnx_export(
             unet_controlnet,
             model_args=(
                 torch.randn(2, unet_in_channels, unet_sample_size, unet_sample_size).to(device=self.device, dtype=self.dtype),
@@ -142,7 +142,7 @@ class StableDiffusionConverter:
         unet_dir = os.path.dirname(unet_model_path)
         # optimize onnx
         shape_inference.infer_shapes_path(unet_model_path, unet_model_path)
-        unet_opt_graph = optimize(onnx.load(unet_model_path), name="Unet", verbose=True)
+        unet_opt_graph = self.optimize(onnx.load(unet_model_path), name="Unet", verbose=True)
         # clean up existing tensor files
         shutil.rmtree(unet_dir)
         os.mkdir(unet_dir)
