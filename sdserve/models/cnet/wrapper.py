@@ -47,4 +47,4 @@ class ControlNetWrapper(torch.nn.Module):
             added_cond_kwargs=added_cond_kwargs if added_cond_kwargs else None,
             return_dict=False,
         )
-        return down_block_res_samples + [mid_block_res_sample] # return list instead of tuple(list, non-list)
+        return tuple(down_block_res_samples), mid_block_res_sample # return tuple
