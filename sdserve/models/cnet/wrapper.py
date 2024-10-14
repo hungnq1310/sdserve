@@ -2,9 +2,9 @@ import torch
 from diffusers import ControlNetModel
 from diffusers.schedulers import KarrasDiffusionSchedulers
 
-class FlexControlNet(torch.nn.Module):
+class ControlNetWrapper(torch.nn.Module):
     """
-    FlexControlNet is a wrapper around ControlNetModel that allows flattening inputs and outputs
+    ControlNetWrapper is a wrapper around ControlNetModel that allows flattening inputs and outputs
     of diffusers's ControlNetModel for ONNX conversion.
     
     Features:
