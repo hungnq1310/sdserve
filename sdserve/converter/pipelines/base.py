@@ -246,3 +246,73 @@ class StableDiffusionConverter(OnnxConverter):
         del self.model.vae
 
    
+class StableDiffusionXLConverter(StableDiffusionConverter):
+
+    def convert(self):
+        #TODO: Extend more components: text_encoder_2, image_processor, vae_2
+        pass
+    
+    def _convert_unet(self):
+        num_tokens = self.model.text_encoder.config.max_position_embeddings
+        # # UNET
+        unet_in_channels = self.model.unet.config.in_channels
+        unet_sample_size = self.model.unet.config.sample_size
+        #? WHY 2048
+        text_hidden_size = 2048
+        img_size = 8 * unet_sample_size
+        unet_path = self.output_path / "unet" / "model.onnx" 
+
+        model_args = (
+            torch.randn(2, unet_in_channels, unet_sample_size, unet_sample_size).to(device=self.device, dtype=self.dtype),
+            torch.tensor([1.0]).to(device=self.device, dtype=self.dtype),
+            torch.randn(2, num_tokens, text_hidden_size).to(device=self.device, dtype=self.dtype),
+            torch.randn(2, 3, img_size, img_size).to(device=self.device, dtype=self.dtype),
+            torch.randn(2).to(device=self.device, dtype=self.dtype),
+            torch.randn(2, 1280).to(device=self.device, dtype=self.dtype),
+            torch.rand(2, 6).to(device=self.device, dtype=self.dtype),
+        )
+        self.onnx_export(
+            self.model.unet,
+            model_args=model_args,
+            output_path=unet_path,
+            ordered_input_names=[
+                "sample",
+                "timestep",
+                "encoder_hidden_states",
+                "controlnet_conds",
+                "conditioning_scales",
+                "text_embeds",
+                "time_ids",
+            ],
+            output_names=["noise_pred"],  # has to be different from "sample" for correct tracing
+            dynamic_axes={
+                "sample": {0: "batch", 2: "height", 3: "width"},
+                "timestep": {0: "batch"},
+                "encoder_hidden_states": {0: "batch"},
+                "controlnet_conds": {0: "batch", 3: "height", 4: "width"},
+                "conditioning_scales": {0: "batch"},
+                "text_embeds": {0: "batch"},
+                "time_ids": {0: "batch"},
+            },
+            opset=self.opset,
+            use_external_data_format=True,  # UNet is > 2GB, so the weights need to be split
+        )
+        unet_model_path = str(unet_path.absolute().as_posix())
+        unet_dir = os.path.dirname(unet_model_path)
+        # optimize onnx
+        shape_inference.infer_shapes_path(unet_model_path, unet_model_path)
+        unet_opt_graph = self.optimize(onnx.load(unet_model_path), name="Unet", verbose=True)
+        # clean up existing tensor files
+        shutil.rmtree(unet_dir)
+        os.mkdir(unet_dir)
+        # collate external tensor files into one
+        onnx.save_model(
+            unet_opt_graph,
+            unet_model_path,
+            save_as_external_data=True,
+            all_tensors_to_one_file=True,
+            location="weights.pb",
+            convert_attribute=False,
+        )
+        del self.model.unet
+        return unet_sample_size
