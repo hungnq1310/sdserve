@@ -54,6 +54,13 @@ class Optimizer:
 
 class OnnxConverter:
 
+    def get_inputs_names(self, model):
+        from inspect import signature
+ 
+        forward_parameters = signature(model.forward).parameters
+        forward_inputs_set = list(forward_parameters.keys()) #! Ordered
+        return forward_inputs_set
+
     def optimize(onnx_graph, name, verbose):
         opt = Optimizer(onnx_graph, verbose=verbose)
         opt.info(name + ": original")
