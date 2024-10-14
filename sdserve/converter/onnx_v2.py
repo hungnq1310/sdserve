@@ -54,6 +54,9 @@ class Optimizer:
 
 class OnnxConverter:
 
+    def convert(self):
+        raise NotImplementedError
+
     def get_inputs_names(self, model):
         from inspect import signature
  
