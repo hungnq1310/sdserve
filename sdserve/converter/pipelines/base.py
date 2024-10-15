@@ -3,6 +3,7 @@ import shutil
 
 import onnx
 import torch
+from pathlib import Path
 from onnx import shape_inference
 from packaging import version
 
@@ -89,7 +90,7 @@ class StableDiffusionConverter(OnnxConverter):
         self.opset = opset
         self.fp16 = fp16
         self.task = task
-        self.output_path = output_path
+        self.output_path = Path(output_path)
         self.dtype = torch.float16 if self.fp16 else torch.float32
         self.device = "cpu"
 
