@@ -249,9 +249,37 @@ class StableDiffusionConverter(OnnxConverter):
 class StableDiffusionXLConverter(StableDiffusionConverter):
 
     def convert(self):
-        #TODO: Extend more components: text_encoder_2, image_processor, vae_2
-        pass
+        #TODO: Extend more components: text_encoder_2, tokenizer_v2
+        self._convert_text_encoder()
+        self._convert_unet()
+        self._convert_vae()
+        if self.model.text_encoder_2 is not None:
+            self._convert_text_encoder_2()
+        del self.model
     
+    def _convert_text_encoder_2(self):
+        # # TEXT ENCODER
+        text_input = self.model.tokenizer_2(
+            "A sample prompt",
+            padding="max_length",
+            max_length=self.model.tokenizer_2.model_max_length,
+            truncation=True,
+            return_tensors="pt",
+        )
+        self.onnx_export(
+            self.model.text_encoder_2,
+            # casting to torch.int32 until the CLIP fix is released: https://github.com/huggingface/transformers/pull/18515/files
+            model_args=(text_input.input_ids.to(device=self.device, dtype=self.torch.int32)),
+            output_path=self.output_path / "text_encoder" / "model.onnx",
+            ordered_input_names=["input_ids"],
+            output_names=["last_hidden_state", "pooler_output"],
+            dynamic_axes={
+                "input_ids": {0: "batch", 1: "sequence"},
+            },
+            opset=self.opset,
+        )
+        del self.model.text_encoder_2
+
     def _convert_unet(self):
         num_tokens = self.model.text_encoder.config.max_position_embeddings
         # # UNET
