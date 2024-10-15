@@ -1,6 +1,6 @@
 from safetensors.torch import load_file
 import torch
-from sdserve.models.cnext.wrapper import ControlNeXt
+from sdserve.models.cnext.wrapper import ControlNeXt, ControlNeXtXL
 from sdserve.converter.onnx_v2 import OnnxConverter
 
 def load_safetensors(model, safetensors_path, strict=True, load_weight_increasement=False):
@@ -16,9 +16,19 @@ def load_safetensors(model, safetensors_path, strict=True, load_weight_increasem
 
 #TODO: convert this to class and inherit from OnnxConverter
 class ControlNeXtConverter(OnnxConverter):
-    def __init__(self, ckpt_path: str, output_path: str, opset_version: int = 14, do_constant_folding: bool = True):
+    def __init__(self, 
+                 config: dict, 
+                 ckpt_path: str, 
+                 output_path: str, 
+                 opset_version: int = 14, 
+                 do_constant_folding: bool = True,
+                 is_sdxl: bool = False
+                ):
         # load from checkpoint
-        self.controlnext = ControlNeXt()
+        if is_sdxl:
+            self.controlnet = ControlNeXtXL.from_config(config)
+        else:
+            self.controlnext = ControlNeXt.from_config(config)
         load_safetensors(self.controlnext, ckpt_path)
         self.output_path = output_path
         self.opset_version = opset_version
