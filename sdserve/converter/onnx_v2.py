@@ -64,7 +64,7 @@ class OnnxConverter:
         forward_inputs_set = list(forward_parameters.keys()) #! Ordered
         return forward_inputs_set
 
-    def optimize(onnx_graph, name, verbose):
+    def optimize(self, onnx_graph, name, verbose):
         opt = Optimizer(onnx_graph, verbose=verbose)
         opt.info(name + ": original")
         opt.cleanup()
@@ -79,6 +79,7 @@ class OnnxConverter:
 
 
     def onnx_export(
+        self,
         model,
         model_args: tuple,
         output_path: Path,
