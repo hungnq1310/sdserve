@@ -93,6 +93,11 @@ class StableDiffusionConverter(OnnxConverter):
         self.dtype = torch.float16 if self.fp16 else torch.float32
         self.device = "cpu"
 
+        # some variable for dummy input
+        self.num_tokens = self.model.text_encoder.config.max_position_embeddings
+        self.text_hidden_size = self.model.text_encoder.config.hidden_size
+        self.unet_sample_size = self.model.unet.config.sample_size
+
 
     @torch.no_grad()
     def convert(self):
@@ -144,9 +149,6 @@ class StableDiffusionConverter(OnnxConverter):
         del self.model.text_encoder
 
     def _convert_unet(self):
-        # text encoder shapes
-        num_tokens = self.model.text_encoder.config.max_position_embeddings
-        text_hidden_size = self.model.text_encoder.config.hidden_size
         # unet shapes
         unet_in_channels = self.model.unet.config.in_channels
         unet_sample_size = self.model.unet.config.sample_size
@@ -158,7 +160,7 @@ class StableDiffusionConverter(OnnxConverter):
             model_args=(
                 torch.randn(2, unet_in_channels, unet_sample_size, unet_sample_size).to(device=self.device, dtype=self.dtype),
                 torch.tensor([1.0]).to(device=self.device, dtype=self.dtype),
-                torch.randn(2, num_tokens, text_hidden_size).to(device=self.device, dtype=self.dtype),
+                torch.randn(2, self.num_tokens, self.text_hidden_size).to(device=self.device, dtype=self.dtype),
                 torch.randn(2, 3, img_size, img_size).to(device=self.device, dtype=self.dtype),
                 torch.randn(2).to(device=self.device, dtype=self.dtype),
             ),
@@ -202,8 +204,6 @@ class StableDiffusionConverter(OnnxConverter):
         
 
     def _convert_vae(self):
-        # Unet 
-        unet_sample_size = self.model.unet.config.sample_size
         # VAE ENCODER
         vae_encoder = self.model.vae
         vae_in_channels = vae_encoder.config.in_channels
@@ -229,7 +229,7 @@ class StableDiffusionConverter(OnnxConverter):
         vae_decoder.forward = vae_encoder.decode
         model_args =(
             torch.randn(
-                1, vae_latent_channels, unet_sample_size, unet_sample_size
+                1, vae_latent_channels, self.unet_sample_size, self.unet_sample_size
             ).to(device=self.device, dtype=self.dtype),
         )
         self.onnx_export(
@@ -281,7 +281,6 @@ class StableDiffusionXLConverter(StableDiffusionConverter):
         del self.model.text_encoder_2
 
     def _convert_unet(self):
-        num_tokens = self.model.text_encoder.config.max_position_embeddings
         # # UNET
         unet_in_channels = self.model.unet.config.in_channels
         unet_sample_size = self.model.unet.config.sample_size
@@ -293,7 +292,7 @@ class StableDiffusionXLConverter(StableDiffusionConverter):
         model_args = (
             torch.randn(2, unet_in_channels, unet_sample_size, unet_sample_size).to(device=self.device, dtype=self.dtype),
             torch.tensor([1.0]).to(device=self.device, dtype=self.dtype),
-            torch.randn(2, num_tokens, text_hidden_size).to(device=self.device, dtype=self.dtype),
+            torch.randn(2, self.num_tokens, text_hidden_size).to(device=self.device, dtype=self.dtype),
             torch.randn(2, 3, img_size, img_size).to(device=self.device, dtype=self.dtype),
             torch.randn(2).to(device=self.device, dtype=self.dtype),
             torch.randn(2, 1280).to(device=self.device, dtype=self.dtype),
