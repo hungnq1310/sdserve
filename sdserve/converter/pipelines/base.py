@@ -113,9 +113,13 @@ class StableDiffusionConverter(OnnxConverter):
         """
         # # TEXT ENCODER
         self._convert_text_encoder()
-        
-        # # UNET
-        self._convert_unet()
+
+        # XL pipeline
+        if "xl" in self.model.config._name_or_path:
+            self._convert_unet_xl()
+            self._convert_text_encoder_2()
+        else:
+            self._convert_unet()
 
         # VAE ENCODER
         self._convert_vae()
@@ -245,18 +249,6 @@ class StableDiffusionConverter(OnnxConverter):
         )
         del self.model.vae
 
-   
-class StableDiffusionXLConverter(StableDiffusionConverter):
-
-    def convert(self):
-        #TODO: Extend more components: text_encoder_2, tokenizer_v2
-        self._convert_text_encoder()
-        self._convert_unet()
-        self._convert_vae()
-        if self.model.text_encoder_2 is not None:
-            self._convert_text_encoder_2()
-        del self.model
-    
     def _convert_text_encoder_2(self):
         # # TEXT ENCODER
         text_input = self.model.tokenizer_2(
@@ -280,7 +272,7 @@ class StableDiffusionXLConverter(StableDiffusionConverter):
         )
         del self.model.text_encoder_2
 
-    def _convert_unet(self):
+    def _convert_unet_xl(self):
         # # UNET
         unet_in_channels = self.model.unet.config.in_channels
         unet_sample_size = self.model.unet.config.sample_size
