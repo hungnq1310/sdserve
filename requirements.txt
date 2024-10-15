@@ -1,0 +1,13 @@
+transformers 
+numpy==1.26.4
+diffusers==0.28.0
+onnx==1.15.0
+onnxruntime==1.17.0
+onnxruntime-gpu==1.17.0
+optimum
+optimum[exporters]
+safetensors
+onnx_graphsurgeon
+polygraphy
+peft
+colored
