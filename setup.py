@@ -53,7 +53,6 @@ def get_readme_description(path: str = os.path.join(os.getcwd(), 'README.md')):
 
 setup(
     name='sdserve',
-    version=get_version(),
     packages=find_packages(),
     zip_safe=True,
     description='Code converter for stable diffusion models.',
