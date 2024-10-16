@@ -19,9 +19,17 @@ jobs:
         run: |
           wget https://huggingface.co/datasets/hero-nq1310/stablediffusion-hub/resolve/main/pretrained.zip
           unzip pretrained.zip -d /models
+
+      - name: install repo
+        uses: actions/checkout@v4
+        run: | 
           pip install -r requirements.txt
           ./sdserve/scripts/optinum_convert_sd.sh
-          
+      - uses: actions/download-artifact@v4
+        with:
+          name: my-artifact
+      - name: Display structure of downloaded files
+        run: ls -R
 
       
             
