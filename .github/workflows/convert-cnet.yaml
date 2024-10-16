@@ -28,7 +28,6 @@ jobs:
           pip install -r requirements.txt
           bash cnext_convert.sh
       - uses: actions/download-artifact@v4
-        working-directory: ${{github.workspace}}
         with:
           name: my-artifact
       - name: Display structure of downloaded files
