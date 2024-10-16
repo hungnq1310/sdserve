@@ -1,5 +1,5 @@
 python cnextxl_converter.py \
-    --ckpt-path /path/to/ckpt \
-    --output-path /path/to/output \
+    --ckpt-path "/models/pretrained/ControlAny-SDXL/vidit_depth/controlnet.safetensors" \
+    --output-path /models \
     --opset 14 \
     --is-sdxl
