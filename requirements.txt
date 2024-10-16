@@ -11,3 +11,4 @@ onnx_graphsurgeon
 polygraphy
 peft
 colored
+einops
