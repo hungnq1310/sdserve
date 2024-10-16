@@ -21,7 +21,7 @@ jobs:
       - name: prepare
         run: |
           wget https://huggingface.co/datasets/hero-nq1310/stablediffusion-hub/resolve/main/pretrained.zip
-          unzip pretrained.zip -d /models
+          unzip pretrained.zip -d models
       - name: install repo
         working-directory: ${{github.workspace}}
         run: | 
