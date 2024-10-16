@@ -26,7 +26,7 @@ class ControlNeXtConverter(OnnxConverter):
                 ):
         # load from checkpoint
         if is_sdxl:
-            self.controlnet = ControlNeXtXL.from_config(config)
+            self.controlnext = ControlNeXtXL.from_config(config)
         else:
             self.controlnext = ControlNeXt.from_config(config)
         load_safetensors(self.controlnext, ckpt_path)
@@ -46,7 +46,7 @@ class ControlNeXtConverter(OnnxConverter):
         # export to onnx
         onnx_output_path = self.output_path + "/model.onnx"
         torch.onnx.export(
-            self.controlnet,
+            self.controlnext,
             dummy_inputs,               
             onnx_output_path,              
             opset_version=self.opset_version,           
