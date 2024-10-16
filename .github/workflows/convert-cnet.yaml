@@ -24,7 +24,7 @@ jobs:
       - name: install repo
         run: | 
           pip install -r requirements.txt
-          ./sdserve/scripts/optinum_convert_sd.sh
+          bash ./sdserve/scripts/optinum_convert_sd.sh
       - uses: actions/download-artifact@v4
         with:
           name: my-artifact
