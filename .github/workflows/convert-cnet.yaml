@@ -7,6 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: hieupth/tritonserver:24.08
+      options: --user root
       volumes:
         - ./models:/models
       env:
@@ -19,9 +20,8 @@ jobs:
         run: |
           wget https://huggingface.co/datasets/hero-nq1310/stablediffusion-hub/resolve/main/pretrained.zip
           unzip pretrained.zip -d /models
-
+      - uses: actions/checkout@v4
       - name: install repo
-        uses: actions/checkout@v4
         run: | 
           pip install -r requirements.txt
           ./sdserve/scripts/optinum_convert_sd.sh
