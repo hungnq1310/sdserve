@@ -16,12 +16,12 @@ jobs:
       - name: Check for dockerenv file
         run: (ls /.dockerenv && echo Found dockerenv) || (echo No dockerenv)
 
+      - uses: actions/checkout@v4
+      - run: dir
       - name: prepare
         run: |
           wget https://huggingface.co/datasets/hero-nq1310/stablediffusion-hub/resolve/main/pretrained.zip
           unzip pretrained.zip -d /models
-      - uses: actions/checkout@v4
-      - run: dir
       - name: install repo
         working-directory: ${{github.workspace}}
         run: | 
