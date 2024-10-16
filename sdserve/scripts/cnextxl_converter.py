@@ -43,4 +43,4 @@ if __name__ == "__main__":
     parser.add_argument("--fp16", action="store_true", default=False, help="Export the models in `float16` mode")
     #
     args = parser.parse_args()
-    convert_models(args.ckpt_path, args.output_path, args.opset, args.fp16, args.sd_xl)
+    convert_models(args.ckpt_path, args.output_path, args.opset, args.fp16, args.is_sdxl)
