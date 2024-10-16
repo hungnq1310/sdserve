@@ -26,14 +26,14 @@ def convert_models(weight_path, output_path, opset, fp16, sd_xl):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     #
-    parser.add_argument("--sd_xl", action="store_true", default=False, help="SD XL pipeline")
+    parser.add_argument("--sd-xl", action="store_true", default=False, help="SD XL pipeline")
     parser.add_argument(
-        "--ckpt_path",
+        "--ckpt-path",
         type=str,
         required=True,
         help="Path to the `diffusers` checkpoint to convert (either a local directory or on the Hub).",
     )
-    parser.add_argument("--output_path", type=str, required=True, help="Path to the output model.")
+    parser.add_argument("--output-path", type=str, required=True, help="Path to the output model.")
     parser.add_argument(
         "--opset",
         default=14,
