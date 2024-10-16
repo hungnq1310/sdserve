@@ -5,20 +5,23 @@ on: [push]
 jobs:
   container-job:
     runs-on: ubuntu-latest
+    container:
+      image: hieupth/tritonserver:24.08
+      volumes:
+        - ./models:/models
+      env:
+        MODEL_PATH: /models
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
       - name: Run step in container
         uses: addnab/docker-run-action@v3
-        with:
-          image: hieupth/tritonserver:24.08
-          volumes:
-            - ./models:/models
-          run: wget https://huggingface.co/datasets/hero-nq1310/stablediffusion-hub/resolve/main/pretrained.zip
-          run: unzip pretrained.zip -d /models
-          run: pip install -r requirements.txt
-          run: bash -c "./sdserve/scripts/optinum_convert_sd.sh"
+        run: |
+          wget https://huggingface.co/datasets/hero-nq1310/stablediffusion-hub/resolve/main/pretrained.zip
+          unzip pretrained.zip -d /models
+          pip install -r requirements.txt
+          bash -c "./sdserve/scripts/optinum_convert_sd.sh"
           
 
       
