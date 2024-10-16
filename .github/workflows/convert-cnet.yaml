@@ -21,6 +21,7 @@ jobs:
           wget https://huggingface.co/datasets/hero-nq1310/stablediffusion-hub/resolve/main/pretrained.zip
           unzip pretrained.zip -d /models
       - uses: actions/checkout@v4
+      - run: dir
       - name: install repo
         run: | 
           pip install -r requirements.txt
