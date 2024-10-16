@@ -20,8 +20,9 @@ jobs:
       - run: dir
       - name: prepare
         run: |
-          wget https://huggingface.co/datasets/hero-nq1310/stablediffusion-hub/resolve/main/pretrained.zip
-          unzip pretrained.zip -d models
+          wget https://huggingface.co/datasets/hero-nq1310/stablediffusion-hub/resolve/main/controlnet.safetensors
+          mv controlnet.safetensors models/controlnet.safetensors
+          # unzip pretrained.zip -d models
       - name: install repo
         working-directory: ${{github.workspace}}
         run: | 
