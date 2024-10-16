@@ -26,7 +26,7 @@ def convert_models(weight_path, output_path, opset, fp16, sd_xl):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     #
-    parser.add_argument("--sd-xl", action="store_true", default=False, help="SD XL pipeline")
+    parser.add_argument("--is-sdxl", action="store_true", default=False, help="SD XL pipeline")
     parser.add_argument(
         "--ckpt-path",
         type=str,
