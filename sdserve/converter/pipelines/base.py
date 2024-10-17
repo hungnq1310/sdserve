@@ -213,8 +213,6 @@ class StableDiffusionConverter(OnnxConverter):
         vae_encoder = self.model.vae
         vae_in_channels = vae_encoder.config.in_channels
         vae_sample_size = vae_encoder.config.sample_size
-        # need to get the raw tensor output (sample) from the encoder
-        vae_encoder.forward = lambda sample: vae_encoder.encode(sample).latent_dist.sample()
         self.onnx_export(
             vae_encoder,
             model_args=(torch.randn(1, vae_in_channels, vae_sample_size, vae_sample_size).to(device=self.device, dtype=self.dtype),),
@@ -223,6 +221,7 @@ class StableDiffusionConverter(OnnxConverter):
             output_names=["latent_sample"],
             dynamic_axes={
                 "sample": {0: "batch", 1: "channels", 2: "height", 3: "width"},
+                "latent_sample": {0: "batch", 1: "channels", 2: "height", 3: "width"},
             },
             opset=self.opset,
         )
@@ -231,7 +230,6 @@ class StableDiffusionConverter(OnnxConverter):
         vae_decoder = self.model.vae
         vae_latent_channels = vae_decoder.config.latent_channels
         # forward only through the decoder part
-        vae_decoder.forward = vae_encoder.decode
         model_args =(
             torch.randn(
                 1, vae_latent_channels, self.unet_sample_size, self.unet_sample_size
@@ -244,6 +242,7 @@ class StableDiffusionConverter(OnnxConverter):
             ordered_input_names=["latent_sample"],
             output_names=["sample"],
             dynamic_axes={
+                "sample": {0: "batch", 1: "channels", 2: "height", 3: "width"},
                 "latent_sample": {0: "batch", 1: "channels", 2: "height", 3: "width"},
             },
             opset=self.opset,
