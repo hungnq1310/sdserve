@@ -32,10 +32,10 @@ jobs:
       #   with:
       #     name: my-artifact
       - name: Archive Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
-          name: sdserve
-          path: /home/runner/work/sdserve/models/model.onnx
+          name: cnext-convert
+          path: /models/model.onnx
 
       - name: Display structure of downloaded files
         run: ls -R
