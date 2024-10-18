@@ -29,7 +29,7 @@ class ControlNeXtConverter(OnnxConverter):
             self.controlnext = ControlNeXtXL.from_config(config)
         else:
             self.controlnext = ControlNeXt.from_config(config)
-        load_safetensors(self.controlnext, ckpt_path)
+        load_safetensors(self.controlnext, ckpt_path, strict=False)
         self.output_path = output_path
         self.opset_version = opset_version
         self.do_constant_folding = do_constant_folding
