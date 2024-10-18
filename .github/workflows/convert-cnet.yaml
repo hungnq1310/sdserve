@@ -28,9 +28,15 @@ jobs:
         run: | 
           pip install -r requirements.txt -e .
           bash cnext_convert.sh
-      - uses: actions/download-artifact@v4
+      # - uses: actions/download-artifact@v4
+      #   with:
+      #     name: my-artifact
+      - name: Archive Artifact
+        uses: actions/upload-artifact@v2
         with:
-          name: my-artifact
+          name: sdserve
+          path: /home/runner/work/sdserve/models/model.onnx
+
       - name: Display structure of downloaded files
         run: ls -R
 
