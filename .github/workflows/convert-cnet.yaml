@@ -35,7 +35,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: cnext-convert
-          path: /models/model.onnx
+          path: models/model.onnx
 
       - name: Display structure of downloaded files
         run: ls -R
